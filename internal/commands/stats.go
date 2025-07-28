@@ -43,7 +43,7 @@ func stats(ctx *ext.Context, u *ext.Update) error {
 
 	stats, err := statsCache.GetCompleteStats()
 	if err != nil {
-		m.log.Error("Failed to get statistics", zap.Error(err))
+		// Log error but don't expose it to user
 		ctx.Reply(u, "❌ Failed to retrieve statistics. Please try again later.", nil)
 		return dispatcher.EndGroups
 	}
