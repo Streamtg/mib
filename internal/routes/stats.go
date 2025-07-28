@@ -2,7 +2,6 @@ package routes
 
 import (
 	"EverythingSuckz/fsb/internal/cache"
-	"EverythingSuckz/fsb/internal/types"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
