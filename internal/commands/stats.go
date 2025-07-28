@@ -55,30 +55,30 @@ func stats(ctx *ext.Context, u *ext.Update) error {
 }
 
 func formatStatisticsMessage(stats types.StatisticsResponse) string {
-	message := "📊 **Bot Statistics**\n\n"
+	message := "📊 Bot Statistics\n\n"
 	
 	// Today's stats
-	message += fmt.Sprintf("**Today:** %d files - %s\n", 
+	message += fmt.Sprintf("Today: %d files - %s\n", 
 		stats.Today.FileCount, 
 		utils.FormatFileSizeShort(stats.Today.TotalSize))
 	
 	// Yesterday's stats
-	message += fmt.Sprintf("**Yesterday:** %d files - %s\n", 
+	message += fmt.Sprintf("Yesterday: %d files - %s\n", 
 		stats.Yesterday.FileCount, 
 		utils.FormatFileSizeShort(stats.Yesterday.TotalSize))
 	
 	// Last 7 days stats
-	message += fmt.Sprintf("**Last 7 days:** %d files - %s\n", 
+	message += fmt.Sprintf("Last 7 days: %d files - %s\n", 
 		stats.LastWeek.FileCount, 
 		utils.FormatFileSizeShort(stats.LastWeek.TotalSize))
 	
 	// Total stats
-	message += fmt.Sprintf("**All time:** %d files - %s\n\n", 
+	message += fmt.Sprintf("All time: %d files - %s\n\n", 
 		stats.Total.FileCount, 
 		utils.FormatFileSizeShort(stats.Total.TotalSize))
 	
-	message += "🔄 *Stats are updated in real-time*\n"
-	message += "⏰ *Last updated: " + time.Now().Format("2006-01-02 15:04:05") + "*"
+	message += "🔄 Stats are updated in real-time\n"
+	message += "⏰ Last updated: " + time.Now().Format("2006-01-02 15:04:05") + "."
 	
 	return message
 } 
