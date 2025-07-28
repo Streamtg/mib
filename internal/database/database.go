@@ -59,12 +59,11 @@ func GetDB() *gorm.DB {
 	return DB
 }
 
-// GormLogWriter implements io.Writer for GORM logging
+// GormLogWriter implements logger.Writer for GORM logging
 type GormLogWriter struct {
 	log *zap.Logger
 }
 
-func (w *GormLogWriter) Write(p []byte) (n int, err error) {
-	w.log.Debug(string(p))
-	return len(p), nil
+func (w *GormLogWriter) Printf(format string, args ...interface{}) {
+	w.log.Sugar().Debugf(format, args...)
 } 
