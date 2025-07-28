@@ -4,6 +4,7 @@ import (
 	"EverythingSuckz/fsb/config"
 	"EverythingSuckz/fsb/internal/bot"
 	"EverythingSuckz/fsb/internal/cache"
+	"EverythingSuckz/fsb/internal/database"
 	"EverythingSuckz/fsb/internal/routes"
 	"EverythingSuckz/fsb/internal/types"
 	"EverythingSuckz/fsb/internal/utils"
@@ -38,7 +39,15 @@ func runApp(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Panic("Failed to start main bot", zap.Error(err))
 	}
+	
+	// Initialize database
+	err = database.InitDatabase(log)
+	if err != nil {
+		log.Panic("Failed to initialize database", zap.Error(err))
+	}
+	
 	cache.InitCache(log)
+	cache.InitStatsCache(log)
 	workers, err := bot.StartWorkers(log)
 	if err != nil {
 		log.Panic("Failed to start workers", zap.Error(err))
