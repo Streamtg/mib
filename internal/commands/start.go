@@ -27,6 +27,6 @@ func start(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
-	ctx.Reply(u, "Need a direct streamable link to a file? Send it my way! 🤓\n\nJoin my Update Channel @haris_garage 🗿 for more updates.\n\nLink validity: 24 hours ⏳\n\nPro Tip: Use 1DM Browser for lightning-fast downloads! 🔥", nil)
+	ctx.Reply(u, "Need a direct streamable link to a file? Send it my way! 🤓\n\nJoin my Update Channel @haris_garage 🗿 for more updates.\n\nLink validity: 24 hours ⏳\n\nPro Tip: Use 1DM Browser for lightning-fast downloads! 🔥\n\n📊 Use /stats to view bot statistics", nil)
 	return dispatcher.EndGroups
 }
