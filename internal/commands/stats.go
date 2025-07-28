@@ -12,7 +12,6 @@ import (
 	"github.com/celestix/gotgproto/dispatcher/handlers"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/celestix/gotgproto/storage"
-	"go.uber.org/zap"
 )
 
 func (m *command) LoadStats(dispatcher dispatcher.Dispatcher) {
