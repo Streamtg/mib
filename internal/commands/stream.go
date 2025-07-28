@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"EverythingSuckz/fsb/config"
+	"EverythingSuckz/fsb/internal/cache"
 	"EverythingSuckz/fsb/internal/utils"
 
 	"github.com/celestix/gotgproto/dispatcher"
@@ -125,6 +126,15 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 	)
 	hash := utils.GetShortHash(fullHash)
 	link := fmt.Sprintf("%s/stream/%d?hash=%s", config.ValueOf.Host, messageID, hash)
+	
+	// Record statistics for this file
+	statsCache := cache.GetStatsCache()
+	if statsCache != nil {
+		err := statsCache.RecordFileProcessed(file.FileSize)
+		if err != nil {
+			utils.Logger.Error("Failed to record file statistics", zap.Error(err))
+		}
+	}
 	
 	// Create formatted message with clickable hyperlink
 	message := fmt.Sprintf("📄 File Name: %s\n\n📥 Download Link:\n%s\n\n⏳ Link validity is 24 hours", file.FileName, link)
