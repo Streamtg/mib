@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -93,52 +92,23 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
-	// ---- FORZAR SUSCRIPCIÓN REAL A VARIOS CANALES ----
-	forceChannels := []string{"yoelbots", "pelisgxg"}
-	subscribed := true
-
-	for _, ch := range forceChannels {
-		// Verificar si el usuario es participante del canal
-		_, err := ctx.Raw.ChannelsGetParticipant(context.Background(), &tg.ChannelsGetParticipantRequest{
-			Channel: &tg.InputChannelUsername{Username: ch},
-			UserId:  &tg.InputUser{UserID: chatId},
-		})
-		if err != nil {
-			subscribed = false
-			break
-		}
-	}
-
-	// --- Construir botones de canales ---
-	var rows []tg.KeyboardButtonRow
-	for _, ch := range forceChannels {
-		text := ch
-		if ch == "pelisgxg" {
-			text = "🎬 Películas y Series en Español"
-		} else {
-			text = "📢 @" + ch
-		}
-		row := tg.KeyboardButtonRow{
-			Buttons: []tg.KeyboardButtonClass{
-				&tg.KeyboardButtonURL{
-					Text: text,
-					URL:  fmt.Sprintf("https://t.me/%s", ch),
+	if config.ValueOf.ForceSubChannel != "" {
+		isSubscribed, err := utils.IsUserSubscribed(ctx, ctx.Raw, ctx.PeerStorage, chatId)
+		if err != nil || !isSubscribed {
+			row := tg.KeyboardButtonRow{
+				Buttons: []tg.KeyboardButtonClass{
+					&tg.KeyboardButtonURL{
+						Text: "Join Channel",
+						URL:  fmt.Sprintf("https://t.me/%s", config.ValueOf.ForceSubChannel),
+					},
 				},
-			},
+			}
+			markup := &tg.ReplyInlineMarkup{Rows: []tg.KeyboardButtonRow{row}}
+			ctx.Reply(u, "Please join our channel to get stream links.", &ext.ReplyOpts{Markup: markup})
+			return dispatcher.EndGroups
 		}
-		rows = append(rows, row)
 	}
 
-	if !subscribed {
-		ctx.Reply(u,
-			"🚨 Para usar este bot debes unirte a nuestros canales obligatorios:\n\n"+
-				"Después de unirte, reenvía tu archivo otra vez. ✅",
-			&ext.ReplyOpts{Markup: &tg.ReplyInlineMarkup{Rows: rows}},
-		)
-		return dispatcher.EndGroups
-	}
-
-	// --- VALIDAR TIPO DE ARCHIVO ---
 	supported, err := supportedMediaFilter(u.EffectiveMessage)
 	if err != nil {
 		return err
@@ -148,7 +118,6 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
-	// --- REENVÍO AL CANAL DE LOGS ---
 	update, err := utils.ForwardMessages(ctx, chatId, config.ValueOf.LogChannelID, u.EffectiveMessage.ID)
 	if err != nil {
 		ctx.Reply(u, fmt.Sprintf("Error - %s", err.Error()), nil)
@@ -163,7 +132,6 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
-	// --- DETECTAR NOMBRE Y EXTENSIÓN ---
 	if file.FileName == "" {
 		var ext string
 		lowerMime := strings.ToLower(file.MimeType)
@@ -203,7 +171,6 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		}
 	}
 
-	// --- MENSAJE VISUAL ---
 	emoji := fileTypeEmoji(file.MimeType)
 	size := formatFileSize(file.FileSize)
 	message := fmt.Sprintf(
@@ -221,23 +188,29 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		_ = statsCache.RecordFileProcessed(file.FileSize)
 	}
 
-	// --- BOTÓN STREAMING / DOWNLOAD ---
 	videoParam := fmt.Sprintf("%d?hash=%s", messageID, hash)
 	encodedVideoParam := url.QueryEscape(videoParam)
 	encodedFilename := url.QueryEscape(file.FileName)
 	streamURL := fmt.Sprintf("https://file.streamgramm.workers.dev/?video=%s&filename=%s", encodedVideoParam, encodedFilename)
 
-	streamRow := tg.KeyboardButtonRow{
+	// --- Botones añadidos debajo del canal ---
+	row1 := tg.KeyboardButtonRow{
 		Buttons: []tg.KeyboardButtonClass{
-			&tg.KeyboardButtonURL{
-				Text: "Streaming / Download",
-				URL:  streamURL,
-			},
+			&tg.KeyboardButtonURL{Text: "📢 @yoelbots", URL: "https://t.me/yoelbots"},
 		},
 	}
-	rows = append(rows, streamRow)
+	row2 := tg.KeyboardButtonRow{
+		Buttons: []tg.KeyboardButtonClass{
+			&tg.KeyboardButtonURL{Text: "🎬 Películas y Series en Español @pelisgxg", URL: "https://t.me/pelisgxg"},
+		},
+	}
+	row3 := tg.KeyboardButtonRow{
+		Buttons: []tg.KeyboardButtonClass{
+			&tg.KeyboardButtonURL{Text: "Streaming / Download", URL: streamURL},
+		},
+	}
 
-	markup := &tg.ReplyInlineMarkup{Rows: rows}
+	markup := &tg.ReplyInlineMarkup{Rows: []tg.KeyboardButtonRow{row1, row2, row3}}
 
 	_, err = ctx.Reply(u, message, &ext.ReplyOpts{
 		Markup:           markup,
