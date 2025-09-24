@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -40,6 +41,7 @@ func supportedMediaFilter(m *types.Message) (bool, error) {
 	}
 }
 
+// Convierte bytes a tamaño legible
 func formatFileSize(bytes int64) string {
 	const (
 		KB = 1024
@@ -56,6 +58,7 @@ func formatFileSize(bytes int64) string {
 	}
 }
 
+// Emoji según tipo de archivo
 func fileTypeEmoji(mime string) string {
 	lowerMime := strings.ToLower(mime)
 	switch {
@@ -90,12 +93,17 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
-	// ---- FORZAR SUSCRIPCIÓN A CANALES ----
+	// ---- FORZAR SUSCRIPCIÓN REAL A VARIOS CANALES ----
 	forceChannels := []string{"yoelbots", "pelisgxg"}
 	subscribed := true
+
 	for _, ch := range forceChannels {
-		isSub, err := utils.IsUserSubscribed(ctx, ctx.Raw, ctx.PeerStorage, chatId, ch)
-		if err != nil || !isSub {
+		// Verificar si el usuario es participante del canal
+		_, err := ctx.Raw.ChannelsGetParticipant(context.Background(), &tg.ChannelsGetParticipantRequest{
+			Channel: &tg.InputChannelUsername{Username: ch},
+			UserId:  &tg.InputUser{UserID: chatId},
+		})
+		if err != nil {
 			subscribed = false
 			break
 		}
@@ -120,8 +128,17 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		}
 		rows = append(rows, row)
 	}
-	// ---- FIN BOTONES CANALES ----
 
+	if !subscribed {
+		ctx.Reply(u,
+			"🚨 Para usar este bot debes unirte a nuestros canales obligatorios:\n\n"+
+				"Después de unirte, reenvía tu archivo otra vez. ✅",
+			&ext.ReplyOpts{Markup: &tg.ReplyInlineMarkup{Rows: rows}},
+		)
+		return dispatcher.EndGroups
+	}
+
+	// --- VALIDAR TIPO DE ARCHIVO ---
 	supported, err := supportedMediaFilter(u.EffectiveMessage)
 	if err != nil {
 		return err
@@ -131,6 +148,7 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
+	// --- REENVÍO AL CANAL DE LOGS ---
 	update, err := utils.ForwardMessages(ctx, chatId, config.ValueOf.LogChannelID, u.EffectiveMessage.ID)
 	if err != nil {
 		ctx.Reply(u, fmt.Sprintf("Error - %s", err.Error()), nil)
@@ -145,6 +163,7 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
+	// --- DETECTAR NOMBRE Y EXTENSIÓN ---
 	if file.FileName == "" {
 		var ext string
 		lowerMime := strings.ToLower(file.MimeType)
@@ -184,6 +203,7 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		}
 	}
 
+	// --- MENSAJE VISUAL ---
 	emoji := fileTypeEmoji(file.MimeType)
 	size := formatFileSize(file.FileSize)
 	message := fmt.Sprintf(
@@ -201,7 +221,7 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 		_ = statsCache.RecordFileProcessed(file.FileSize)
 	}
 
-	// --- Botón de streaming / descarga ---
+	// --- BOTÓN STREAMING / DOWNLOAD ---
 	videoParam := fmt.Sprintf("%d?hash=%s", messageID, hash)
 	encodedVideoParam := url.QueryEscape(videoParam)
 	encodedFilename := url.QueryEscape(file.FileName)
@@ -215,18 +235,9 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 			},
 		},
 	}
-	rows = append(rows, streamRow) // Añadir botón de streaming al final
+	rows = append(rows, streamRow)
 
 	markup := &tg.ReplyInlineMarkup{Rows: rows}
-
-	if !subscribed {
-		ctx.Reply(u,
-			"🚨 Para usar este bot debes unirte a nuestros canales obligatorios:\n\n"+
-				"Después de unirte, reenvía tu archivo otra vez. ✅",
-			&ext.ReplyOpts{Markup: markup},
-		)
-		return dispatcher.EndGroups
-	}
 
 	_, err = ctx.Reply(u, message, &ext.ReplyOpts{
 		Markup:           markup,
