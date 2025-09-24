@@ -1,9 +1,6 @@
 package commands
 
 import (
-	"fmt"
-	"strings"
-
 	"EverythingSuckz/fsb/config"
 	"EverythingSuckz/fsb/internal/utils"
 
@@ -11,6 +8,7 @@ import (
 	"github.com/celestix/gotgproto/dispatcher/handlers"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/celestix/gotgproto/storage"
+	"github.com/gotd/td/tg" // <-- agregar este import
 )
 
 func (m *command) LoadStart(dispatcher dispatcher.Dispatcher) {
@@ -30,39 +28,7 @@ func start(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
-	// FORZAR SUSCRIPCIÓN A MULTIPLES CANALES
-	if config.ValueOf.ForceSubChannels != "" {
-		channels := strings.Split(config.ValueOf.ForceSubChannels, ",")
-		notJoined := []string{}
-
-		for _, ch := range channels {
-			ch = strings.TrimSpace(ch)
-			isSubscribed, err := utils.IsUserSubscribed(ctx, ctx.Raw, ctx.PeerStorage, chatId)
-			if err != nil || !isSubscribed {
-				notJoined = append(notJoined, ch)
-			}
-		}
-
-		if len(notJoined) > 0 {
-			rows := []tg.KeyboardButtonRow{}
-			for _, ch := range notJoined {
-				row := tg.KeyboardButtonRow{
-					Buttons: []tg.KeyboardButtonClass{
-						&tg.KeyboardButtonURL{
-							Text: fmt.Sprintf("Join @%s", ch),
-							URL:  fmt.Sprintf("https://t.me/%s", ch),
-						},
-					},
-				}
-				rows = append(rows, row)
-			}
-			markup := &tg.ReplyInlineMarkup{Rows: rows}
-			ctx.Reply(u, "Please join all required channels to use this bot:", &ext.ReplyOpts{Markup: markup})
-			return dispatcher.EndGroups
-		}
-	}
-
-	// MENSAJE PRINCIPAL
+	// Bot message
 	message := `Hello! 👋 I'm your file-sharing assistant.
 
 📂 Send or forward me any file (in any format!) and I'll instantly give you a direct link to download or view online. ⚡
@@ -88,5 +54,20 @@ Official channel: @yoelbots
 💡 To view bot statistics, type /stats 📊`
 
 	ctx.Reply(u, message, nil)
+
+	// Si quieres forzar suscripción a un canal singular
+	if config.ValueOf.ForceSubChannel != "" {
+		row := tg.KeyboardButtonRow{
+			Buttons: []tg.KeyboardButtonClass{
+				&tg.KeyboardButtonURL{
+					Text: "Join Channel",
+					URL:  "https://t.me/" + config.ValueOf.ForceSubChannel,
+				},
+			},
+		}
+		markup := &tg.ReplyInlineMarkup{Rows: []tg.KeyboardButtonRow{row}}
+		ctx.Reply(u, "Please join our channel to use the bot.", &ext.ReplyOpts{Markup: markup})
+	}
+
 	return dispatcher.EndGroups
 }
