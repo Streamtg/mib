@@ -27,6 +27,30 @@ func start(ctx *ext.Context, u *ext.Update) error {
 		return dispatcher.EndGroups
 	}
 
-	ctx.Reply(u, "Need a direct streamable link to a file? Send it my way! 🤓\n\nJoin my Update Channel @haris_garage 🗿 for more updates.\n\nLink validity: 24 hours ⏳\n\nPro Tip: Use 1DM Browser for lightning-fast downloads! 🔥\n\n📊 Use /stats to view bot statistics", nil)
+	message := `Hello! 👋 I'm your file-sharing assistant.
+
+📂 Send or forward me any file (in any format!) and I'll instantly give you a direct link to download or view online. ⚡
+
+💡 You can also use this bot as a *host* for movie and series channels, etc. 🎬
+
+How to get started?
+
+1️⃣ Send or forward me a file
+2️⃣ Wait a few seconds ⏱️
+3️⃣ Receive your link 🚀
+
+🎬 Follow our movies and series channels
+
+🇺🇸 English Movies
+https://t.me/moviegxg
+
+🇲🇽 Películas en español Latino
+https://t.me/peligxg
+
+Official channel: @yoelbots
+
+💡 To view bot statistics, type /stats 📊`
+
+	ctx.Reply(u, message, nil)
 	return dispatcher.EndGroups
 }
