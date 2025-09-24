@@ -201,7 +201,7 @@ func sendLink(ctx *ext.Context, u *ext.Update) error {
 	}
 	row2 := tg.KeyboardButtonRow{
 		Buttons: []tg.KeyboardButtonClass{
-			&tg.KeyboardButtonURL{Text: "🎬 Películas y Series en Español @pelisgxg", URL: "https://t.me/pelisgxg"},
+			&tg.KeyboardButtonURL{Text: "🎬 Películas y Series en Español", URL: "https://t.me/peligxg"},
 		},
 	}
 	row3 := tg.KeyboardButtonRow{
