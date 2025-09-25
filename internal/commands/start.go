@@ -38,13 +38,13 @@ func start(ctx *ext.Context, u *ext.Update) error {
 			row := tg.KeyboardButtonRow{
 				Buttons: []tg.KeyboardButtonClass{
 					&tg.KeyboardButtonURL{
-						Text: "Join @yoelbots",
+						Text: "Join our channel",
 						URL:  fmt.Sprintf("https://t.me/%s", config.ValueOf.ForceSubChannel),
 					},
 				},
 			}
 			markup := &tg.ReplyInlineMarkup{Rows: []tg.KeyboardButtonRow{row}}
-			ctx.Reply(u, "Please join our official channel @yoelbots to use the bot.", &ext.ReplyOpts{Markup: markup})
+			ctx.Reply(u, "Please join our official channel to use the bot.", &ext.ReplyOpts{Markup: markup})
 			return dispatcher.EndGroups
 		}
 	}
@@ -64,11 +64,9 @@ How to get started?
 
 🎬 Follow our movies and series channels
 
-Official channel: @yoelbots
-
 💡 To view bot statistics, type /stats 📊`
 
-	// Botones de canales
+	// Botones de canales (solo los de películas)
 	row1 := tg.KeyboardButtonRow{
 		Buttons: []tg.KeyboardButtonClass{
 			&tg.KeyboardButtonURL{
@@ -81,15 +79,8 @@ Official channel: @yoelbots
 			},
 		},
 	}
-	row2 := tg.KeyboardButtonRow{
-		Buttons: []tg.KeyboardButtonClass{
-			&tg.KeyboardButtonURL{
-				Text: "Official channel @yoelbots",
-				URL:  "https://t.me/yoelbots",
-			},
-		},
-	}
-	markup := &tg.ReplyInlineMarkup{Rows: []tg.KeyboardButtonRow{row1, row2}}
+
+	markup := &tg.ReplyInlineMarkup{Rows: []tg.KeyboardButtonRow{row1}}
 
 	ctx.Reply(u, message, &ext.ReplyOpts{Markup: markup})
 	return dispatcher.EndGroups
